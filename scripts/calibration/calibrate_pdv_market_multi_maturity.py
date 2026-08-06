@@ -198,18 +198,41 @@ def evaluate_surface(
             model_future * moneyness
         )
 
-        _, _, call_prices = (
-            model.compute_option_price(
-                strikes=strikes,
-                option_maturity=maturity,
-                return_future=True,
-                var_reduction=True,
-            )
-        )
+        # Price in small strike batches. The theta-gamma
+        # variance-reduction implementation creates tensors with
+        # shape roughly (n_strikes, n_timesteps, n_paths), so
+        # batching prevents large memory spikes at high path counts.
+        price_chunks = []
 
-        call_prices = (
-            to_numpy(call_prices)
-            .astype(float)
+        batch_size = 8
+
+        for start in range(
+            0,
+            len(strikes),
+            batch_size,
+        ):
+            stop = min(
+                start + batch_size,
+                len(strikes),
+            )
+
+            _, _, batch_prices = (
+                model.compute_option_price(
+                    strikes=strikes[start:stop],
+                    option_maturity=maturity,
+                    return_future=True,
+                    var_reduction=True,
+                )
+            )
+
+            price_chunks.append(
+                to_numpy(
+                    batch_prices
+                ).astype(float)
+            )
+
+        call_prices = np.concatenate(
+            price_chunks
         )
 
         normalized_calls = (
