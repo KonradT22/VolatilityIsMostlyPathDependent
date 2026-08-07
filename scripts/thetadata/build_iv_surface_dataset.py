@@ -62,7 +62,15 @@ def parse_target_dtes(value):
     return [int(x.strip()) for x in value.split(",") if x.strip()]
 
 
-def select_expirations(client, symbol, trade_date, target_dtes):
+def select_expirations(
+    client,
+    symbol,
+    trade_date,
+    quote_time,
+    target_dtes,
+    strike_range,
+    max_candidates=12,
+):
     exp = client.option_list_expirations(symbol)
     exp["expiration"] = pd.to_datetime(exp["expiration"]).dt.date
     exp = exp[exp["expiration"] > trade_date].copy()
@@ -72,15 +80,63 @@ def select_expirations(client, symbol, trade_date, target_dtes):
     seen = set()
 
     for target in target_dtes:
-        nearest = exp.iloc[(exp["dte"] - target).abs().argsort()].iloc[0]
-        expiration = nearest["expiration"]
+        candidates = exp.copy()
+        candidates["distance"] = (candidates["dte"] - target).abs()
+        candidates = candidates.sort_values(
+            ["distance", "dte"]
+        ).head(max_candidates)
 
-        if expiration not in seen:
-            selected.append((expiration, int(nearest["dte"]), target))
-            seen.add(expiration)
+        chosen = None
+
+        for row in candidates.itertuples(index=False):
+            expiration = row.expiration
+
+            if expiration in seen:
+                continue
+
+            try:
+                quotes = client.option_at_time_quote(
+                    symbol=symbol,
+                    start_date=trade_date,
+                    end_date=trade_date,
+                    time_of_day=quote_time,
+                    expiration=expiration,
+                    strike="*",
+                    right="both",
+                    strike_range=strike_range,
+                )
+
+                if quotes is None or quotes.empty:
+                    continue
+
+                chosen = (
+                    expiration,
+                    int(row.dte),
+                    target,
+                )
+
+                print(
+                    f"target={target:>3} "
+                    f"selected actual_dte={int(row.dte):>3} "
+                    f"expiration={expiration} "
+                    f"probe_rows={len(quotes)}"
+                )
+                break
+
+            except Exception:
+                continue
+
+        if chosen is None:
+            print(
+                f"WARNING: no usable expiration found "
+                f"for target_dte={target}"
+            )
+            continue
+
+        selected.append(chosen)
+        seen.add(chosen[0])
 
     return selected
-
 
 def build_one_expiration_slice(
     client,
@@ -266,7 +322,14 @@ def main():
         dataframe_type="pandas",
     )
 
-    selected = select_expirations(client, symbol, trade_date, target_dtes)
+    selected = select_expirations(
+        client=client,
+        symbol=symbol,
+        trade_date=trade_date,
+        quote_time=quote_time,
+        target_dtes=target_dtes,
+        strike_range=args.strike_range,
+    )
 
     print("Selected expirations:")
     for expiration, dte, target in selected:
