@@ -250,8 +250,12 @@ def evaluate_surface(
         market["actual_dte"].max()
     )
 
+    # Simulate one calendar day beyond the longest requested
+    # maturity. The model and pricing code use slightly different
+    # integer rounding when mapping maturity to timestep indices;
+    # the cushion guarantees the requested pricing index exists.
     simulation_maturity = (
-        max_actual_dte / 365.0
+        (max_actual_dte + 1) / 365.0
     )
 
     model = build_model(
