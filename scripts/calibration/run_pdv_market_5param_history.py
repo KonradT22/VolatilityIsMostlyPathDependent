@@ -47,8 +47,8 @@ DATES_BACKWARD = [
 
 N_PATHS = 4000
 SEED_ROOT = 2026080701
-MAXITER = 350
-MAXFEV = 700
+MAXITER = 600
+MAXFEV = 1200
 
 
 def load_summary(date):
@@ -172,20 +172,35 @@ def main():
             flush=True,
         )
 
-        # Resume safely if this date was already completed
-        # during a previous partial sequence.
+        # Resume successful dates. An existing unsuccessful
+        # calibration is rerun instead of being propagated as
+        # the next day's warm start.
+        existing_summary = None
+
         if summary_file.exists():
+            existing_summary = load_summary(
+                date
+            )
+
+        if (
+            existing_summary is not None
+            and existing_summary.get("success", False)
+        ):
             print(
-                "Existing summary found; "
+                "Existing successful summary found; "
                 "using saved result.",
                 flush=True,
             )
 
-            summary = load_summary(
-                date
-            )
+            summary = existing_summary
 
         else:
+            if existing_summary is not None:
+                print(
+                    "Existing calibration was unsuccessful; "
+                    "rerunning this date.",
+                    flush=True,
+                )
             start_arg = ",".join(
                 f"{x:.17g}"
                 for x in current_params
@@ -224,13 +239,23 @@ def main():
                 date
             )
 
-        current_params = (
-            summary["recovered_params"]
-        )
-
         rows.append(
             summary_row(summary)
         )
+
+        # Only a successfully converged calibration is allowed
+        # to become the next day's warm start. If this date did
+        # not converge, preserve the previous successful vector.
+        if summary["success"]:
+            current_params = (
+                summary["recovered_params"]
+            )
+        else:
+            print(
+                "Calibration did not converge; "
+                "keeping previous successful warm start.",
+                flush=True,
+            )
 
         # Save after every date so a partial run
         # is never lost.

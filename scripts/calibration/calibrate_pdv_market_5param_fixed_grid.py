@@ -587,14 +587,47 @@ def main():
             f"Invalid starting parameters: {reason}"
         )
 
-    start_result = evaluate_surface(
-        params=start_params,
-        market=market,
-        R_init1=R_init1,
-        R_init2=R_init2,
-        n_paths=args.n_paths,
-        seed_root=args.seed_root,
-    )
+    try:
+        start_result = evaluate_surface(
+            params=start_params,
+            market=market,
+            R_init1=R_init1,
+            R_init2=R_init2,
+            n_paths=args.n_paths,
+            seed_root=args.seed_root,
+        )
+
+    except (ValueError, IndexError) as exc:
+        print(
+            "WARNING: warm start could not produce a valid "
+            f"surface: {type(exc).__name__}: {exc}",
+            flush=True,
+        )
+
+        if np.allclose(
+            start_params,
+            DEFAULT_START,
+            rtol=0.0,
+            atol=1e-12,
+        ):
+            raise
+
+        print(
+            "Falling back to DEFAULT_START:",
+            DEFAULT_START,
+            flush=True,
+        )
+
+        start_params = DEFAULT_START.copy()
+
+        start_result = evaluate_surface(
+            params=start_params,
+            market=market,
+            R_init1=R_init1,
+            R_init2=R_init2,
+            n_paths=args.n_paths,
+            seed_root=args.seed_root,
+        )
 
     print(
         "start global RMSE:",
