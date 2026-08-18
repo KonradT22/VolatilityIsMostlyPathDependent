@@ -253,11 +253,15 @@ def main():
         predictions,
     )
 
-    selected.to_csv(
-        args.output_dir
-        / "selected_balanced_scenarios.csv",
-        index=False,
-    )
+    # Only chunk 0 writes the shared deterministic
+    # scenario-selection manifest. This avoids concurrent
+    # array tasks writing the same file.
+    if args.chunk_id == 0:
+        selected.to_csv(
+            args.output_dir
+            / "selected_balanced_scenarios.csv",
+            index=False,
+        )
 
     start = args.start_row
     stop = min(
