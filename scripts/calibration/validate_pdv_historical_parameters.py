@@ -35,6 +35,16 @@ OUTDIR = (
     / "historical_independent_validation"
 )
 
+RESULTS_PATH = (
+    OUTDIR
+    / "independent_seed_results.csv"
+)
+
+PER_DATE_PATH = (
+    OUTDIR
+    / "independent_validation_by_date.csv"
+)
+
 N_PATHS = 20000
 
 SEEDS = [
@@ -42,6 +52,12 @@ SEEDS = [
     2026080721,
     2026080722,
 ]
+
+EXPECTED_MODEL_FAILURES = {
+    "nonpositive_volatility",
+    "nonfinite_volatility",
+    "nonfinite_model_option_price",
+}
 
 
 def build_state(trade_date):
@@ -79,6 +95,102 @@ def build_state(trade_date):
     )
 
     return r1, r2
+
+
+def save_checkpoint(rows):
+    pd.DataFrame(rows).to_csv(
+        RESULTS_PATH,
+        index=False,
+    )
+
+
+def build_per_date(results):
+    rows = []
+
+    for date, g in results.groupby(
+        "trade_date",
+        sort=True,
+    ):
+        valid = g[
+            g["valid"]
+        ].copy()
+
+        calibration_rmse = float(
+            g["calibration_4k_rmse"].iloc[0]
+        )
+
+        if len(valid):
+            mean_rmse = float(
+                valid[
+                    "validation_20k_rmse"
+                ].mean()
+            )
+
+            std_rmse = (
+                float(
+                    valid[
+                        "validation_20k_rmse"
+                    ].std()
+                )
+                if len(valid) > 1
+                else 0.0
+            )
+
+            min_rmse = float(
+                valid[
+                    "validation_20k_rmse"
+                ].min()
+            )
+
+            max_rmse = float(
+                valid[
+                    "validation_20k_rmse"
+                ].max()
+            )
+
+            difference = (
+                mean_rmse
+                - calibration_rmse
+            )
+
+            ratio = (
+                mean_rmse
+                / calibration_rmse
+            )
+
+        else:
+            mean_rmse = np.nan
+            std_rmse = np.nan
+            min_rmse = np.nan
+            max_rmse = np.nan
+            difference = np.nan
+            ratio = np.nan
+
+        rows.append({
+            "trade_date": date,
+            "calibration_4k_rmse":
+                calibration_rmse,
+            "valid_seed_count":
+                int(len(valid)),
+            "invalid_seed_count":
+                int((~g["valid"]).sum()),
+            "all_seeds_valid":
+                bool(g["valid"].all()),
+            "validation_20k_mean_rmse":
+                mean_rmse,
+            "validation_20k_std_rmse":
+                std_rmse,
+            "validation_20k_min_rmse":
+                min_rmse,
+            "validation_20k_max_rmse":
+                max_rmse,
+            "validation_minus_calibration":
+                difference,
+            "validation_over_calibration":
+                ratio,
+        })
+
+    return pd.DataFrame(rows)
 
 
 def main():
@@ -139,25 +251,44 @@ def main():
         )
         print("=" * 78)
 
-        seed_scores = []
-
         for seed in SEEDS:
-            result = evaluate_surface(
-                params=params,
-                market=market,
-                R_init1=r1,
-                R_init2=r2,
-                n_paths=N_PATHS,
-                seed_root=seed,
-            )
+            valid = True
+            failure_reason = ""
+            score = np.nan
+            equal_tenor_score = np.nan
 
-            score = result[
-                "global_rmse"
-            ]
+            try:
+                result = evaluate_surface(
+                    params=params,
+                    market=market,
+                    R_init1=r1,
+                    R_init2=r2,
+                    n_paths=N_PATHS,
+                    seed_root=seed,
+                )
 
-            seed_scores.append(
-                score
-            )
+                score = float(
+                    result[
+                        "global_rmse"
+                    ]
+                )
+
+                equal_tenor_score = float(
+                    result[
+                        "equal_tenor_rmse"
+                    ]
+                )
+
+            except ValueError as exc:
+                failure_reason = str(exc)
+
+                if (
+                    failure_reason
+                    not in EXPECTED_MODEL_FAILURES
+                ):
+                    raise
+
+                valid = False
 
             rows.append({
                 "trade_date": date,
@@ -172,132 +303,119 @@ def main():
                     float(
                         row.final_global_rmse
                     ),
+                "valid": valid,
+                "failure_reason":
+                    failure_reason,
                 "validation_20k_rmse":
-                    float(score),
+                    score,
                 "validation_equal_tenor_rmse":
-                    float(
-                        result[
-                            "equal_tenor_rmse"
-                        ]
-                    ),
+                    equal_tenor_score,
             })
 
-            print(
-                f"seed={seed} "
-                f"rmse={score:.10f}",
-                flush=True,
-            )
+            # Preserve every completed seed immediately.
+            save_checkpoint(rows)
 
-        mean_score = float(
-            np.mean(seed_scores)
-        )
-
-        print(
-            "mean independent RMSE:",
-            f"{mean_score:.10f}",
-            flush=True,
-        )
+            if valid:
+                print(
+                    f"seed={seed} "
+                    f"VALID "
+                    f"rmse={score:.10f}",
+                    flush=True,
+                )
+            else:
+                print(
+                    f"seed={seed} "
+                    f"INVALID "
+                    f"reason={failure_reason}",
+                    flush=True,
+                )
 
     results = pd.DataFrame(
         rows
     )
 
-    results.to_csv(
-        OUTDIR
-        / "independent_seed_results.csv",
-        index=False,
-    )
-
-    per_date = (
-        results.groupby(
-            "trade_date",
-            as_index=False,
-        )
-        .agg(
-            calibration_4k_rmse=(
-                "calibration_4k_rmse",
-                "first",
-            ),
-            validation_20k_mean_rmse=(
-                "validation_20k_rmse",
-                "mean",
-            ),
-            validation_20k_std_rmse=(
-                "validation_20k_rmse",
-                "std",
-            ),
-            validation_20k_min_rmse=(
-                "validation_20k_rmse",
-                "min",
-            ),
-            validation_20k_max_rmse=(
-                "validation_20k_rmse",
-                "max",
-            ),
-        )
-    )
-
-    per_date[
-        "validation_minus_calibration"
-    ] = (
-        per_date[
-            "validation_20k_mean_rmse"
-        ]
-        - per_date[
-            "calibration_4k_rmse"
-        ]
-    )
-
-    per_date[
-        "validation_over_calibration"
-    ] = (
-        per_date[
-            "validation_20k_mean_rmse"
-        ]
-        / per_date[
-            "calibration_4k_rmse"
-        ]
+    per_date = build_per_date(
+        results
     )
 
     per_date.to_csv(
-        OUTDIR
-        / "independent_validation_by_date.csv",
+        PER_DATE_PATH,
         index=False,
     )
+
+    valid_results = results[
+        results["valid"]
+    ]
+
+    invalid_results = results[
+        ~results["valid"]
+    ]
+
+    valid_dates = per_date[
+        per_date["all_seeds_valid"]
+    ]
 
     summary = {
         "n_dates": 20,
         "N_paths": N_PATHS,
         "seeds": SEEDS,
+        "total_evaluations":
+            int(len(results)),
+        "valid_evaluations":
+            int(len(valid_results)),
+        "invalid_evaluations":
+            int(len(invalid_results)),
+        "dates_all_seeds_valid":
+            int(
+                per_date[
+                    "all_seeds_valid"
+                ].sum()
+            ),
+        "dates_with_invalid_seed":
+            int(
+                (
+                    ~per_date[
+                        "all_seeds_valid"
+                    ]
+                ).sum()
+            ),
         "mean_calibration_4k_rmse":
             float(
                 per_date[
                     "calibration_4k_rmse"
                 ].mean()
             ),
-        "mean_validation_20k_rmse":
+        "mean_validation_20k_rmse_valid_only":
             float(
-                per_date[
-                    "validation_20k_mean_rmse"
+                valid_results[
+                    "validation_20k_rmse"
                 ].mean()
             ),
-        "median_validation_20k_rmse":
+        "median_validation_20k_rmse_valid_only":
             float(
-                per_date[
-                    "validation_20k_mean_rmse"
+                valid_results[
+                    "validation_20k_rmse"
                 ].median()
             ),
-        "mean_validation_over_calibration":
-            float(
-                per_date[
-                    "validation_over_calibration"
-                ].mean()
+        "mean_validation_20k_rmse_fully_valid_dates":
+            (
+                float(
+                    valid_dates[
+                        "validation_20k_mean_rmse"
+                    ].mean()
+                )
+                if len(valid_dates)
+                else None
             ),
-        "worst_validation_20k_mean_rmse":
-            float(
-                per_date[
-                    "validation_20k_mean_rmse"
-                ].max()
+        "worst_validation_20k_mean_rmse_fully_valid_dates":
+            (
+                float(
+                    valid_dates[
+                        "validation_20k_mean_rmse"
+                    ].max()
+                )
+                if len(valid_dates)
+                else None
             ),
     }
 
@@ -324,6 +442,30 @@ def main():
                 f"{x:.10f}",
         )
     )
+
+    print()
+    print("INVALID EVALUATIONS")
+    print("-" * 78)
+
+    if len(invalid_results):
+        print(
+            invalid_results[
+                [
+                    "trade_date",
+                    "seed_root",
+                    "beta0",
+                    "beta1",
+                    "beta2",
+                    "theta1",
+                    "theta2",
+                    "failure_reason",
+                ]
+            ].to_string(
+                index=False
+            )
+        )
+    else:
+        print("None")
 
     print()
     print(
