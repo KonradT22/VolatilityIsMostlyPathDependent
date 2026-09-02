@@ -46,4 +46,4 @@ Seeds are fixed and recorded per stage, not shared globally:
 
 ## Licensing
 
-No LICENSE file is present in this repository, and none was present in the upstream repository this project builds on. If this repository is intended for public/portfolio use, consider adding an explicit license (and confirming terms with the original PDV authors if redistributing their code under a different license than they intend).
+No LICENSE file currently exists in this repository, and none was present upstream. Any future licensing decision should account for the provenance of the upstream implementation.

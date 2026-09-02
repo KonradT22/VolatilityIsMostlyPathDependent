@@ -5,7 +5,7 @@
 
 # Neural Surrogates for Path-Dependent Volatility
 
-**Fast online assimilation of streaming option quotes with guardrails, for a non-Markovian Path-Dependent Volatility model.**
+**Low-latency inverse calibration of a non-Markovian Path-Dependent Volatility model with statistical and numerical guardrails.**
 
 A low-latency inverse neural surrogate for calibrating a non-Markovian Path-Dependent Volatility (PDV) model from option surfaces, with explicit statistical and numerical guardrails for unsupported market states.
 
@@ -206,4 +206,4 @@ The full written UROP report is available at [`docs/report/pdv_surrogate_report.
 | `scripts/analysis/` — final visualization/reporting scripts | UROP |
 | `docs/` | UROP |
 
-No LICENSE file currently exists in this repository (none was present upstream either). If you intend to make this public, consider adding one — see the note in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
+No LICENSE file currently exists in this repository, and none was present upstream. Any future licensing decision should account for the provenance of the upstream implementation — see the note in [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
