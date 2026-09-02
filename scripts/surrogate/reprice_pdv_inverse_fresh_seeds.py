@@ -1,3 +1,8 @@
+"""Fresh-seed robustness check: select a balanced subset (4 scenarios per historical
+anchor x 16 anchors = 64 scenarios) and reprice true vs. predicted parameters under
+three Monte Carlo seeds never used in training or same-seed repricing (192 paired
+comparisons total), to confirm repricing accuracy isn't an artifact of seed reuse."""
+
 import argparse
 import sys
 from pathlib import Path

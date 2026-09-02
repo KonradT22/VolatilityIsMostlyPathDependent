@@ -1,3 +1,8 @@
+"""Build a standardized implied-volatility surface dataset from ThetaData SPX/SPXW
+option quotes: pulls paired call/put quotes per expiration, infers forward and
+discount via put-call parity, selects OTM options, and inverts Black-Scholes IV.
+Schema: docs/iv_surface_dataset_schema.md."""
+
 from pathlib import Path
 import math
 import datetime as dt

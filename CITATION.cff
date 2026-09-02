@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you reference this work, please cite it as below."
+type: software
+title: "Neural Surrogates for Path-Dependent Volatility: Fast Online Assimilation of Streaming Option Quotes with Guardrails"
+authors:
+  - family-names: "Trestka"
+    given-names: "Konrad"
+    affiliation: "University of Minnesota"
+repository-code: "https://github.com/KonradT22/VolatilityIsMostlyPathDependent"
+abstract: >
+  An inverse neural surrogate for calibrating a non-Markovian Path-Dependent Volatility
+  model from option surfaces, with statistical (Mahalanobis / Ledoit-Wolf) and numerical
+  guardrails for unsupported market states. University of Minnesota UROP research project,
+  advised by Prof. John Dodson. Builds on the 4-factor Markovian PDV Monte Carlo
+  implementation from Guyon & Lekeufack, "Volatility Is (Mostly) Path-Dependent."
+references:
+  - type: article
+    title: "Volatility Is (Mostly) Path-Dependent"
+    authors:
+      - family-names: "Guyon"
+        given-names: "Julien"
+      - family-names: "Lekeufack"
+        given-names: "Jordan"
+    url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4174589"

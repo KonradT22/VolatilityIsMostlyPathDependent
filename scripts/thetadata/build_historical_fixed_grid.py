@@ -1,3 +1,7 @@
+"""Resample each historical date's IV surface dataset onto the fixed 77-coordinate
+log-moneyness grid (7 maturities x 11 points) used throughout the calibration and
+inverse-ANN pipeline, via Black normalized OTM pricing at each grid point."""
+
 from pathlib import Path
 import math
 

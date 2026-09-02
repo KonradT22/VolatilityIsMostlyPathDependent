@@ -1,0 +1,4 @@
+# Optional: only needed to run scripts/thetadata/*.py (raw option-quote ingestion).
+# Requires a running ThetaData Terminal and a paid ThetaData subscription (SPX/SPXW options data).
+# Not required for the PDV Monte Carlo engine, calibration, surrogate, or guardrail scripts.
+thetadata

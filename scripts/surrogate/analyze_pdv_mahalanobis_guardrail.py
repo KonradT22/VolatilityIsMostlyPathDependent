@@ -1,3 +1,9 @@
+"""Fit and evaluate the primary OOD guardrail: squared Mahalanobis distance with
+Ledoit-Wolf covariance shrinkage, over both the full 81-D input space (77 prices +
+4 state variables) and a state-only 4-D variant. Threshold is fixed on a held-out
+in-domain calibration split only, then evaluated for separation against later,
+chronologically held-out dates (see docs/GUARDRAILS.md)."""
+
 import json
 from pathlib import Path
 

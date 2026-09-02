@@ -1,3 +1,8 @@
+"""Calibrate the restricted five-parameter PDV model (beta0, beta1, beta2, theta1,
+theta2) against each of the 20 historical fixed-grid option surfaces using
+Nelder-Mead at 4,000 Monte Carlo paths per evaluation. Output feeds
+validate_pdv_historical_parameters.py for independent numerical validation."""
+
 import json
 import subprocess
 import sys

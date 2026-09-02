@@ -1,3 +1,8 @@
+"""Build the chronological train/validation/test split of the 9,667-row synthetic
+inverse dataset: 12 earliest anchor dates train, 2 middle dates (2021-05-27/28)
+validation, 2 latest dates (2021-06-01/02) test. Used to test generalization to
+later, unseen market states and to fit/evaluate the Mahalanobis OOD guardrail."""
+
 import json
 from pathlib import Path
 

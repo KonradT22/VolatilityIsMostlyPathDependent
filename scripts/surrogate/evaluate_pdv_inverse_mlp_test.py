@@ -1,3 +1,7 @@
+"""Evaluate the frozen inverse ANN checkpoint on the untouched interpolation test
+set: per-parameter R2/RMSE/MAE, parameter-bound violation counts before and after
+projection, and CPU forward-pass inference timing (median/p99 latency)."""
+
 import json
 import sys
 import time

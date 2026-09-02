@@ -1,3 +1,9 @@
+"""Generate 10,000 synthetic PDV parameter candidates for inverse-learning-dataset
+construction: sample one of the 16 robust historical anchors uniformly, then perturb
+its five parameters with independent Gaussian jitter in bounded logit space so
+candidates stay within documented parameter bounds. Each candidate keeps its
+anchor's path-dependent state (R1_fast, R1_slow, R2_fast, R2_slow)."""
+
 import json
 from pathlib import Path
 

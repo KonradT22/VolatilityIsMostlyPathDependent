@@ -1,3 +1,10 @@
+"""Price each anchor-jitter candidate's full 77-coordinate option grid at 10,000
+Monte Carlo paths, producing the inverse-learning dataset consumed by the ANN
+training pipeline. Run as SLURM array chunks (see generate_pdv_inverse_dataset.slurm);
+candidates with nonfinite/nonpositive volatility or option prices are rejected and
+logged rather than kept. Also defines the canonical 77-coordinate grid used
+throughout the surrogate/repricing pipeline."""
+
 import argparse
 import os
 import sys

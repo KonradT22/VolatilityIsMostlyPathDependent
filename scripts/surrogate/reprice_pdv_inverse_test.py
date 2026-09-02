@@ -1,3 +1,8 @@
+"""Reprice held-out (bound-projected) ANN parameter predictions through the full
+PDV Monte Carlo model on each scenario's original seed, and compare against the
+true 77-coordinate surface. Reports RMSE/MAE in basis points of forward, per
+scenario and by maturity. Run as chunked SLURM array tasks."""
+
 import argparse
 import sys
 from pathlib import Path

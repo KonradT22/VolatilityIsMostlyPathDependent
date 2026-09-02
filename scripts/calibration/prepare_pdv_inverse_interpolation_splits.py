@@ -1,3 +1,7 @@
+"""Build the interpolation train/validation/test split of the 9,667-row synthetic
+inverse dataset, stratified by anchor date rather than chronologically. This is the
+split behind the headline inverse-ANN test results (959-scenario test set)."""
+
 import json
 from pathlib import Path
 

@@ -7,6 +7,22 @@
 # Ignore .ipynb_checkpoints directories
 .ipynb_checkpoints/
 
+# Python bytecode
+*.pyc
+
+# OS metadata
+.DS_Store
+
+# Editor/IDE
+.vscode/
+
+# Virtual environments
+.venv/
+venv/
+
+# Claude Code local session settings
+.claude/settings.local.json
+
 # local secrets
 *.env
 .theta.env

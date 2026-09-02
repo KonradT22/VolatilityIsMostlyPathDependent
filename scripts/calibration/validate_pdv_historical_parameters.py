@@ -1,3 +1,8 @@
+"""Independently re-evaluate each of the 20 historical 5-parameter PDV calibrations
+at 20,000 Monte Carlo paths under three additional, previously unused seeds. Dates
+where every seed is numerically valid (finite, positive volatility) become the
+robust historical anchors used downstream; dates with any invalid seed are excluded."""
+
 import json
 import sys
 from pathlib import Path

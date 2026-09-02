@@ -1,3 +1,7 @@
+"""Build the empirical PDV parameter prior from the 16 historical dates that passed
+independent numerical validation: parameter mean/std, raw and Ledoit-Wolf-shrunk
+standardized covariance/correlation. Excludes the 4 dates that failed validation."""
+
 import json
 from pathlib import Path
 

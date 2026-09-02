@@ -1,3 +1,7 @@
+"""Generate the final report figures: per-parameter true-vs-predicted recovery
+scatter plots, repricing RMSE by maturity, fresh-seed robustness by Monte Carlo
+seed, and the 81-D Mahalanobis OOD separation histogram."""
+
 from pathlib import Path
 
 import numpy as np

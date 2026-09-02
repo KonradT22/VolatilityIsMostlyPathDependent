@@ -1,3 +1,9 @@
+"""Train the inverse PDV surrogate: an 81 -> 256 -> 256 -> 128 -> 5 GELU MLP mapping
+77 option prices + 4 path-dependent state variables to the five calibrated PDV
+parameters (beta0, beta1, beta2, theta1, theta2). Inputs and targets are standardized
+using training-set statistics only; training uses AdamW with early stopping on
+standardized validation MSE."""
+
 import argparse
 import copy
 import json

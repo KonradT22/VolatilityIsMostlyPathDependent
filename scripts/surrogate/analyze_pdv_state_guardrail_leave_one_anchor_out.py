@@ -1,3 +1,8 @@
+"""Leave-one-anchor-out diagnostic for the state-only (4-D) OOD detector: score each
+training-era anchor state as if it were held out, to build an in-family reference
+distribution, then compare later chronological states against it as a robustness
+check on the Mahalanobis OOD guardrail's chronological-generalization claim."""
+
 import json
 from pathlib import Path
 
