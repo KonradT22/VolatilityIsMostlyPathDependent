@@ -169,7 +169,7 @@ To surface them here, copy small (documentation-sized) exports into `docs/assets
 
 ## Research Report
 
-A detailed written report is not currently included in this repository. If you'd like to add one, place it at `docs/report/pdv_surrogate_report.pdf` and this section can link to it directly.
+The full written UROP report is available at [`docs/report/pdv_surrogate_report.pdf`](docs/report/pdv_surrogate_report.pdf).
 
 ## References
 
